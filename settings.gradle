@@ -3,4 +3,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
-rootProject.name = 'accessionidimporter'
+rootProject.name = 'accession-id-importer'
