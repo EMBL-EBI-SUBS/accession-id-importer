@@ -32,7 +32,6 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = AccessionIdImporterApplication.class)
-@Category(MongoDBDependentTest.class)
 public class AccessionIdImporterServiceTest {
 
     private static final int NUMBER_OF_SUBMISSIONS_NOT_IN_ACCESSIONIDWRAPPER = 10;
