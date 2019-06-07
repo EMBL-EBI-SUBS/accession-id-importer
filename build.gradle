@@ -62,7 +62,7 @@ artifacts {
     archives jar
     archives sourceJar {
         classifier "sources"
-        destinationDirectory = new File("build/libs/sources")
+        destinationDir = new File("build/libs/sources")
     }
 }
 
