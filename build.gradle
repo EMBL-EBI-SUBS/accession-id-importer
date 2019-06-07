@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id 'org.springframework.boot' version '1.5.10.RELEASE'
     id 'java'
+    id 'com.sourcemuse.mongo' version '1.0.0'
 }
 
 configurations {
@@ -42,6 +43,7 @@ dependencies {
 
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'groovy'
+apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'maven'
 apply plugin: 'application'
@@ -63,13 +65,16 @@ artifacts {
     }
 }
 
-task('externalCiTest', type: Test) {
-    useJUnit {
-        excludeCategories 'uk.ac.ebi.subs.accessionidimporter.utils.MongoDBDependentTest'
-    }
+test {
     testLogging {
-        exceptionFormat = 'full'
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
     }
+    runWithMongoDb = true
+}
+
+mongo {
+    mongoVersion = "3.4.3"
 }
 
 springBoot {
