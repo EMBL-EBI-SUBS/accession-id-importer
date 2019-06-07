@@ -62,7 +62,7 @@ artifacts {
     archives jar
     archives sourceJar {
         classifier "sources"
-        destinationDirectory = new File("build/libs/sources")
+        destinationDir = new File("build/libs/sources")
     }
 }
 
@@ -145,12 +145,12 @@ private Object sshRun(File jarDeployFile) {
     ssh.run {
         session(remotes.role(gradle_env)) {
             execute "/homes/sub_adm/create_dirs.sh $gradle_env $project.name", ignoreError: false
-            println "Uploading jar $jar.archiveFileName to $jarDeployDir/$uploadJarFileName  area on $remote"
+            println "Uploading jar $jar.archivePath.name to $jarDeployDir/$uploadJarFileName  area on $remote"
             put(jar.archivePath.absolutePath, jarDeployFile.absolutePath)
-            println "creating symbolic link to $jar.archiveFileName"
-            def result = execute "ln -s -f $jarDeployFile.absolutePath $jarDeployDir/$jar.archiveBaseName" + ".jar", ignoreError: true
+            println "creating symbolic link to $jar.archiveName"
+            def result = execute "ln -s -f $jarDeployFile.absolutePath $jarDeployDir/$jar.baseName" + ".jar", ignoreError: true
             println result
-            println "updating permissions of $jarDeployDir/$jar.archiveBaseName"
+            println "updating permissions of $jarDeployDir/$jar.archiveName"
             execute "chmod u+x $jarDeployDir/*", ignoreError: false
         }
     }
