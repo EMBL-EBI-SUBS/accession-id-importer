@@ -65,7 +65,7 @@ artifacts {
 
 task('externalCiTest', type: Test) {
     useJUnit {
-        excludeCategories 'uk.ac.ebi.subs.MongoDBDependentTest'
+        excludeCategories 'uk.ac.ebi.subs.accessionidimporter.utils.MongoDBDependentTest'
     }
     testLogging {
         exceptionFormat = 'full'
