@@ -3,11 +3,13 @@ package uk.ac.ebi.subs.accessionidimporter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import uk.ac.ebi.subs.AccessionIdImporterApplication;
+import uk.ac.ebi.subs.accessionidimporter.utils.MongoDBDependentTest;
 import uk.ac.ebi.subs.repository.model.Project;
 import uk.ac.ebi.subs.repository.model.Sample;
 import uk.ac.ebi.subs.repository.model.Submission;
@@ -30,6 +32,7 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = AccessionIdImporterApplication.class)
+@Category(MongoDBDependentTest.class)
 public class AccessionIdImporterServiceTest {
 
     private static final int NUMBER_OF_SUBMISSIONS_NOT_IN_ACCESSIONIDWRAPPER = 10;
