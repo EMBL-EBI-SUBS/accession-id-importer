@@ -35,6 +35,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
 
     compile("uk.ac.ebi.subs:subs-repository:2.27.3-SNAPSHOT")
+    compile 'org.codehaus.groovy:groovy-all:2.4.10'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
