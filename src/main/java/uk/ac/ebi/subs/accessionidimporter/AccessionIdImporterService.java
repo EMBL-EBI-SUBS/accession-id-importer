@@ -12,6 +12,8 @@ import uk.ac.ebi.subs.repository.repos.SubmissionRepository;
 import uk.ac.ebi.subs.repository.repos.submittables.ProjectRepository;
 import uk.ac.ebi.subs.repository.repos.submittables.SampleRepository;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +21,6 @@ import java.util.stream.Collectors;
 @Service
 public class AccessionIdImporterService {
 
-    String name;
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessionIdImporterService.class);
 
     private SubmissionRepository submissionRepository;
@@ -45,11 +46,31 @@ public class AccessionIdImporterService {
     }
 
     List<String> getSubmissionIdsNotExistsInAccessionIdWrapper() {
+        LOGGER.info("submission id collection started");
+        LocalDateTime subIdCollectionStarted = LocalDateTime.now();
+
         List<String> submissionIds =
-                submissionRepository.findAll().stream().map(Submission::getId).collect(Collectors.toList());
+                submissionRepository.findAll().parallelStream()
+                        .filter(submission -> {
+                            Project project = projectRepository.findOneBySubmissionId(submission.getId());
+                            return project != null && project.getAccession() != null;
+                        })
+                        .filter(submission -> {
+                            List<Sample> samples = sampleRepository.findBySubmissionId(submission.getId());
+                            return samples != null && !samples.isEmpty()
+                                    && !samples.stream().map(Sample::getAccession).collect(Collectors.toList()).isEmpty();
+
+                        })
+                        .map(Submission::getId)
+                        .collect(Collectors.toList());
+        LOGGER.info("submission id collection finished");
+        LocalDateTime subIdCollectionEnded = LocalDateTime.now();
+        Duration dur = Duration.between(subIdCollectionStarted, subIdCollectionEnded);
+        LOGGER.info("submission id collection took: {}",
+                String.format("%02d:%02d:%02d", dur.toHours(), dur.toMinutes(), dur.getSeconds()));
 
         List<String> submissionIdsFromAccessionIdRepo =
-                accessionIdRepository.findAll().stream().map(AccessionIdWrapper::getSubmissionId).collect(Collectors.toList());
+                accessionIdRepository.findAll().parallelStream().map(AccessionIdWrapper::getSubmissionId).collect(Collectors.toList());
 
         submissionIds.removeAll(submissionIdsFromAccessionIdRepo);
 
@@ -73,15 +94,18 @@ public class AccessionIdImporterService {
                 biosamplesAccessionIds = samples.stream().map(Sample::getAccession).collect(Collectors.toList());
             }
 
-            AccessionIdWrapper accessionIdWrapper = new AccessionIdWrapper();
-            accessionIdWrapper.setSubmissionId(submissionId);
-            accessionIdWrapper.setBioStudiesAccessionId(biostudiesAccessionId);
-            accessionIdWrapper.setBioSamplesAccessionIds(biosamplesAccessionIds);
+            if (biostudiesAccessionId != null && biosamplesAccessionIds != null && biosamplesAccessionIds.size() > 0) {
 
-            accessionIdWrappersToAdd.add(accessionIdWrapper);
+                AccessionIdWrapper accessionIdWrapper = new AccessionIdWrapper();
+                accessionIdWrapper.setSubmissionId(submissionId);
+                accessionIdWrapper.setBioStudiesAccessionId(biostudiesAccessionId);
+                accessionIdWrapper.setBioSamplesAccessionIds(biosamplesAccessionIds);
 
-            LOGGER.info("New AccessionIdWrapper document is about to add to the collection. [submissionId: {}, biostudiesAccessionId: {}, biosamplesAccessionIds: {}]",
-                    submissionId, biostudiesAccessionId, biosamplesAccessionIds);
+                accessionIdWrappersToAdd.add(accessionIdWrapper);
+
+                LOGGER.info("New AccessionIdWrapper document is about to add to the collection. [submissionId: {}, biostudiesAccessionId: {}, biosamplesAccessionIds: {}]",
+                        submissionId, biostudiesAccessionId, biosamplesAccessionIds);
+            }
         });
 
         accessionIdRepository.save(accessionIdWrappersToAdd);
