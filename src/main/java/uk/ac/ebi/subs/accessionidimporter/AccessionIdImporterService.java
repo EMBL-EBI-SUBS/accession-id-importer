@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,7 +59,9 @@ public class AccessionIdImporterService {
                         .filter(submission -> {
                             List<Sample> samples = sampleRepository.findBySubmissionId(submission.getId());
                             return samples != null && !samples.isEmpty()
-                                    && !samples.stream().map(Sample::getAccession).collect(Collectors.toList()).isEmpty();
+                                    && samples.stream()
+                                            .map(Sample::getAccession)
+                                            .anyMatch(Objects::nonNull);
 
                         })
                         .map(Submission::getId)
@@ -66,8 +69,11 @@ public class AccessionIdImporterService {
         LOGGER.info("submission id collection finished");
         LocalDateTime subIdCollectionEnded = LocalDateTime.now();
         Duration dur = Duration.between(subIdCollectionStarted, subIdCollectionEnded);
+        final long hours = dur.toHours();
+        final long minutes = dur.minusHours(hours).toMinutes();
+        final long seconds = dur.minusHours(hours).minusMinutes(minutes).getSeconds();
         LOGGER.info("submission id collection took: {}",
-                String.format("%02d:%02d:%02d", dur.toHours(), dur.toMinutes(), dur.getSeconds()));
+                String.format("%02d:%02d:%02d", hours, minutes, seconds));
 
         List<String> submissionIdsFromAccessionIdRepo =
                 accessionIdRepository.findAll().parallelStream().map(AccessionIdWrapper::getSubmissionId).collect(Collectors.toList());
