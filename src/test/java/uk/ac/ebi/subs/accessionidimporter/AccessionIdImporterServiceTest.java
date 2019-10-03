@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import uk.ac.ebi.subs.AccessionIdImporterApplication;
 import uk.ac.ebi.subs.accessionidimporter.utils.MongoDBDependentTest;
+import uk.ac.ebi.subs.data.submittable.Submittable;
 import uk.ac.ebi.subs.repository.model.Project;
 import uk.ac.ebi.subs.repository.model.Sample;
 import uk.ac.ebi.subs.repository.model.Submission;
@@ -48,6 +49,7 @@ public class AccessionIdImporterServiceTest {
     @Before
     public void setup() {
         submissions.addAll(generateSubmissionsWithoutAccessionIdWrapper(NUMBER_OF_SUBMISSIONS_NOT_IN_ACCESSIONIDWRAPPER));
+        submissions.addAll(generateSubmissionsWithoutAccessionsAndWithoutAccessionIdWrapper(NUMBER_OF_SUBMISSIONS_NOT_IN_ACCESSIONIDWRAPPER));
         submissions.addAll(generateSubmissionsWithAccessionIdWrapper(NUMBER_OF_SUBMISSIONS_ALREADY_IN_ACCESSIONIDWRAPPER));
     }
 
@@ -73,11 +75,23 @@ public class AccessionIdImporterServiceTest {
         });
     }
 
+    private List<Submission> generateSubmissionsWithoutAccessionsAndWithoutAccessionIdWrapper(int numberOfSubmissionsNotInAccessionidwrapper) {
+        List<Submission> submissionsWithoutAccessionIdWrapper = new ArrayList<>();
+        for (int i = 0; i < numberOfSubmissionsNotInAccessionidwrapper; i++) {
+            Submission submission = generateSubmission();
+            generateSampleAndProjectToSubmission(submission, false);
+
+            submissionsWithoutAccessionIdWrapper.add(submission);
+        }
+
+        return submissionsWithoutAccessionIdWrapper;
+    }
+
     private List<Submission> generateSubmissionsWithoutAccessionIdWrapper(int numberOfSubmissionsNotInAccessionidwrapper) {
         List<Submission> submissionsWithoutAccessionIdWrapper = new ArrayList<>();
         for (int i = 0; i < numberOfSubmissionsNotInAccessionidwrapper; i++) {
             Submission submission = generateSubmission();
-            generateSampleAndProjectToSubmission(submission);
+            generateSampleAndProjectToSubmission(submission, true);
 
             submissionsWithoutAccessionIdWrapper.add(submission);
         }
@@ -89,7 +103,7 @@ public class AccessionIdImporterServiceTest {
         List<Submission> submissionsWithAccessionIdWrapper = new ArrayList<>();
         for (int i = 0; i < numberOfSubmissionsInAccessionidwrapper; i++) {
             Submission submission = generateSubmission();
-            generateSampleAndProjectToSubmission(submission);
+            generateSampleAndProjectToSubmission(submission, true);
             addSubmissionToAccessionIdWrapper(submission);
 
             submissionsWithAccessionIdWrapper.add(submission);
@@ -108,20 +122,24 @@ public class AccessionIdImporterServiceTest {
         return submission;
     }
 
-    private void generateSampleAndProjectToSubmission(Submission submission) {
+    private void generateSampleAndProjectToSubmission(Submission submission, boolean isAccessioned) {
         Sample sample = new Sample();
         sample.setId(UUID.randomUUID().toString());
         sample.setSubmission(submission);
-        sample.setAccession("SAME" + ThreadLocalRandom.current().nextInt(10000, 9999999));
-
+        if (isAccessioned) {
+            setAccession(sample, "SAME" + ThreadLocalRandom.current().nextInt(10000, 9999999));
+        }
         sampleRepository.save(sample);
 
         Project project = new Project();
         project.setId(UUID.randomUUID().toString());
         project.setSubmission(submission);
         project.setAccession("S-SUBS" + ThreadLocalRandom.current().nextInt(1000, 999999));
-
         projectRepository.save(project);
+    }
+
+    private void setAccession(Submittable submittable, String accession) {
+        submittable.setAccession(accession);
     }
 
     private void addSubmissionToAccessionIdWrapper(Submission submission) {
